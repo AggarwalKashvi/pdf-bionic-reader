@@ -57,20 +57,29 @@ export async function renderPDF(file, container) {
       textDivs: []
     });
 
-    // ---- Bionic Reading ----
+    // ---- Bionic Reading (per word) ----
     requestAnimationFrame(() => {
       const spans = textLayerDiv.querySelectorAll("span");
 
       spans.forEach(span => {
         const text = span.textContent;
-        if (!text || text.length < 3) return;
-        if (!/[a-zA-Z]/.test(text)) return;
+        if (!text || !/[a-zA-Z]/.test(text)) return;
 
-        const cut = Math.ceil(text.length * 0.5);
-        span.innerHTML =
-          `<strong>${text.slice(0, cut)}</strong>${text.slice(cut)}`;
+        const words = text.split(/(\s+)/); // keep spaces
+
+        const bionicText = words
+          .map(word => {
+            // Skip spaces
+            if (!/[a-zA-Z]/.test(word)) return word;
+
+            const strength = window.__NEUROFLOW__?.getBionicStrength?.() ?? 0.4;
+            const cut = Math.ceil(word.length * strength);
+            return `<strong>${word.slice(0, cut)}</strong>${word.slice(cut)}`;
+          })
+          .join("");
+
+        span.innerHTML = bionicText;
       });
     });
   }
 }
-  
